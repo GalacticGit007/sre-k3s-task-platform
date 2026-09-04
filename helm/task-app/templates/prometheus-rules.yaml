@@ -1,0 +1,60 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: task-app-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: task-app.rules
+      rules:
+        - alert: PodRestartDetected
+          expr: |
+            sum by (pod) (
+              increase(kube_pod_container_status_restarts_total[5m])
+            ) > 0
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod restart detected"
+            description: 'Pod {{ "{{" }} $labels.pod {{ "}}" }} has restarted within the last 5 minutes.'
+
+        - alert: PodNotReady
+          expr: |
+            kube_pod_status_ready{
+              namespace="default",
+              condition="false",
+              pod=~"task-api.*|task-frontend.*"
+            } == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Task application pod is not ready"
+            description: 'Pod {{ "{{" }} $labels.pod {{ "}}" }} has not been ready for more than 5 minutes.'
+
+        - alert: HighNodeCPU
+          expr: |
+            100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High node CPU usage"
+            description: "Node CPU usage has been above 80% for more than 5 minutes."
+
+        - alert: PodCrashLooping
+          expr: |
+            kube_pod_container_status_waiting_reason{
+              namespace="default",
+              reason="CrashLoopBackOff",
+              pod=~"task-api.*|task-frontend.*"
+            } == 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Application pod is CrashLoopBackOff"
+            description: 'Pod {{ "{{" }} $labels.pod {{ "}}" }} is in CrashLoopBackOff.'

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Dashboard</title>
+</head>
+<body>
+    <h1>Task Dashboard</h1>
+
+    <p>API Status: <span id="health">Checking...</span></p>
+
+    <h2>Tasks</h2>
+    <ul id="tasks"></ul>
+
+    <script>
+        async function loadTasks() {
+            const response = await fetch("/api/tasks");
+            const tasks = await response.json();
+
+            const list = document.getElementById("tasks");
+            list.innerHTML = "";
+
+            tasks.forEach(task => {
+                const item = document.createElement("li");
+                item.textContent =
+                    `${task.id}. ${task.name} - ${task.status}`;
+                list.appendChild(item);
+            });
+        }
+
+        async function checkHealth() {
+            const response = await fetch("/api/health");
+            const data = await response.json();
+
+            document.getElementById("health").textContent =
+                data.status;
+        }
+
+        checkHealth();
+        loadTasks();
+    </script>
+</body>
+</html>

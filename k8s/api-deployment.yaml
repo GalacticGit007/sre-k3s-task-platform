@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: task-api
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: task-api
+
+  template:
+    metadata:
+      labels:
+        app: task-api
+
+    spec:
+      containers:
+        - name: task-api
+          image: ghcr.io/galacticgit007/task-api:latest
+
+          ports:
+            - containerPort: 5000
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10

@@ -46,6 +46,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/task-api
+            export KUBECONFIG="$HOME/.kube/config"
             helm upgrade --install task-app helm/task-app
             kubectl rollout status deployment/task-api --timeout=120s
             kubectl rollout status deployment/task-frontend --timeout=120s
